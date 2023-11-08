@@ -1,0 +1,272 @@
+---
+title: "SOCS0100_BVCH8"
+format: pdf
+editor: visual
+bibliography: references.bib
+---
+
+## **SOCS0100 ASSESSMENT**
+
+### **Part I-A Data Exploration and Contextualization**
+
+The World Health Organisation provides the data set Vaccine 2017, which compiles data vaccine coverage and disease burden in countries all over the world.
+
+The data set is stored in tabular (CSV), it contains 7818 rows, representing different countries and 14 columns for attributes. The variables including Entity (countries), Year, immunization coverage of 5 different vaccine types, number of 5 confirmed diseases cases and the estimated deaths due to tuberculosis per 100,000 population and the whole.This part is aiming to give an overall description and understanding of the data set.
+
+```{r}
+#| label: steup 
+#| include: false 
+options(repos = c(CRAN = "https://cran.rstudio.com/"))
+
+# Install the "pacman" package
+install.packages("pacman")
+
+# Load the "pacman" package
+library(pacman)
+
+# Install and load the other packages
+p_load(tidyverse)
+p_load(dplyr)
+p_load(purrr)
+```
+
+After loading dplyr from library to proceed the further coding and read the data set, I use typeof() to check the data type and ensure it can be correctly loaded. By understanding the structure of the data using str(Vaccine2017), which reveal the name of variables and data types including characters, integers and numeric variables in lists. Next, summary() to provide basic statistic information for numeric column in the data frame with na.omit = TRUE to exclude the rows with missing value for standard deviation. To calculate the mean of the data set excluding missing values, I used map_dbl() for applying mean function into each column and na.rm to ensure the exclusion of missing data calculation.
+
+```{r}
+#| label: exhaustive overview
+#| echo: true 
+#| warning: false 
+library(dplyr) 
+
+data <- read.csv("Vaccine2017.csv")
+typeof('Vaccine2017.csv') 
+str(data) 
+data.frame(data) 
+
+df <- data.frame(data, na.omit = TRUE) 
+summary(df) 
+
+library(purrr) 
+df <- data %>% map_dbl(mean, na.rm = TRUE) 
+df
+```
+
+Overall, vaccinations are beneficial to society, the economy, and health. Nonetheless, there remain notable worldwide health disparities in the 20th century, and international health organisations are working to develop vaccines to address these inequality[@rodrigues2020]. Unequal access to vaccines not only perpetuates health inequalities but also exacerbates the spread and impact of life-threatening diseases, particularly in considering outbreaks of viruses such as COVID-19. This dilemma highlights an essential social concern that calls for the combined efforts of people and international organisations. With data collected, I am able to generate the relationship between vaccine coverage and diseases burden and compare the differences among developed and developing countries to shade light into the extent of the problem and find possible solutions.
+
+### **Part I-B Data Processing and Functional Programming**
+
+I started by using the read.csv method to load the data set from the CSV file. "Data" was the name of the data set. I generated summary statistics and data set details using the "skimr" program to get a preliminary look at the data. After setting up, a if statement is used to check if "pacman" package is well installed to ensure the further running of the code and upload the packages needed for the operations.
+
+**Data Selection and Renaming**
+
+The first step after loading the date is to select specific columns of variables that I aim to take insight into. Data selection allows me to get a more specific and focus data. I rename the variables with more concise, understandable and readable abbreviations to improve the clarity of the data set. Therefore, working with a smaller, relevant subset of data and abbreviations can improve the efficiency of processing and avoid overwhelming programming.
+
+**Calculation of Averages**
+
+After selected variables, I calculated the average of variables. To deal with the NAs, I excluded rows related to continents (e.g. "Western Pacific") that do not represent countries using "filter" function. The "group_by" function is applied to the remaining data by "Country" variable. After these basic steps, the data is prepared for the further calculations. The "summarize" used to calculate the average values for three variables and "na.rm = TRUE" argument is for ignoring missing values. Therefore, a new data set named averages with 196 observations and 4 variables containing the average values for the selected variables created. This average calculations are beneficial for the data comparisons between different countries (especially developing and developed countries)
+
+**Generating Tables**
+
+After the calculation, I created tables displaying the top 10 countries with the highest average values for the three variables. Firstly, arranged the "averages" data set in descending order and select the top 10 rows with head(10), styling the table. The last step is to ensure the table is not displayed as a full-width table to improve readability and establish only important content.
+
+**Creating New Variables**
+
+To categorize countries based on the averages, I introduced new variables that indicate whether a country exhibits high values. For instance, new variables "Countries_with_high_BCG_coverage" defined as BCG coverage above 97(the top 10 of the average).
+
+**Filtering of Data with For Loops**
+
+I utilize a for loop to simplify the threshold-based data filtering process by enabling me to apply the same filtering requirement to multiple variables and thresholds. Since the for loop follows to the Do Not Repeat Yourself (DRY) principle, it prevents human error by avoiding function duplication and enables a consistent filtering process to be carried out. It is undesirable to use a while loop because there is no specific condition that needs to be met as my variables have a fixed elements. The for loop provides me the control and sequential processing.
+
+**Reshaping Data Frame**
+
+I reshape the data from long to wide with decrease of rows and increase of columns using "pivot_wider" where each unique value in the "Country" column becomes a new column in the wide-format data frame. The more structured representation of data is used for further data analysis and visualization.
+
+```{r}
+#| label: execute data-wrangling operations
+#| echo: true
+#| warning: false
+#set up
+pacman::p_load( tidyverse, skimr ) 
+setwd("~/Desktop") 
+rm(list = ls()) 
+
+#check if "pacman" package is available, if not, install.
+if (!require("pacman")) { 
+  install.packages("pacman") 
+  } 
+
+pacman::p_load( tidyverse,
+                    purrr, 
+                    kableExtra,
+                    flextable, 
+                    skimr) 
+
+data <- read.csv("SOCS0100-Assessment/Vaccine2017.csv", header = TRUE)
+
+#generate summarize statistics and information of the data set
+skim(data)
+
+#select the variables
+library(dplyr)
+
+#choose specific columns from data set
+df <- data %>% select(Entity, Year, 
+                      BCG.immunization.coverage.among.1.year.olds..WHO.2017.,  
+                      Number.of.confirmed.tetanus.cases..WHO.2017., 
+                    Estimated.deaths.due.to.tuberculosis.per.100.000.population..excluding.HIV..WHO.2017.) %>% 
+#rename the complicated variables' name into concise abbreviation.
+  rename(Country = Entity, 
+         BCG_coverage = BCG.immunization.coverage.among.1.year.olds..WHO.2017., 
+         tetanus_cases = Number.of.confirmed.tetanus.cases..WHO.2017., 
+         deaths = Estimated.deaths.due.to.tuberculosis.per.100.000.population..excluding.HIV..WHO.2017.) 
+
+#to check the structure and variables after selection and rename of variables
+glimpse(df) 
+
+#calculate the average for the three selected variables
+averages <- df %>% 
+  filter(!Country %in% c("World", "Western Pacific", "South-East Asia", "Europe", "Africa")) %>% #excluding continents, only count countries in the calculation
+  group_by(Country) %>% 
+  summarise( 
+    avg_BCG_coverage = mean(BCG_coverage, na.rm = TRUE), 
+    avg_tetanus_cases = mean(tetanus_cases, na.rm = TRUE), 
+    avg_deaths = mean(deaths, na.rm = TRUE)
+    )#compute the average values with excluding missing values
+
+#generate tables of top 10 averages of countries
+top_10_BCG_coverage <- averages %>%
+  arrange(desc(avg_BCG_coverage)) %>%
+  head(10) %>%
+  kable(caption = "Top 10 Countries by Average BCG coverage")
+top_10_BCG_coverage %>%
+  kable_styling("bordered") %>%
+  kable_classic(full_width = FALSE)
+
+top_10_tetanus_cases <- averages %>%
+  arrange(desc(avg_tetanus_cases)) %>%
+  head(10) %>%
+  kable(caption = "Top 10 Countries by Average tetanus cases")
+top_10_tetanus_cases %>%
+  kable_styling("bordered") %>%
+  kable_classic(full_width = FALSE)
+  
+top_10_deaths <- averages %>%
+  arrange(desc(avg_deaths)) %>%
+  head(10) %>%
+  kable(caption = "Top 10 Countries by Average Deaths")
+top_10_deaths %>%
+  kable_styling("bordered") %>%
+  kable_classic(full_width = FALSE)
+
+#create list of two data frames, with specific countries along with average data
+data_list <- list(
+  data.frame(Country = c("Hungary", "Nigeria", "China"),
+             avg_BCG_coverage = c(99.00000, 48.20000, 87.24242),
+             avg_tetanus_cases = c(21.902439, 2279.529, 1515.400),
+             avg_deaths = c(2.10625, 93.50000, 5.03125)),
+  data.frame(Country = c("Fiji", "India", "Cambodia"),
+             avg_BCG_coverage = c(97.94444, 62.11429, 71.90625),
+             avg_tetanus_cases = c(0.900000, 21199.575, 554.09375),
+             avg_deaths = c(3.80625, 45.81250, 97.2500))
+)
+
+#calculate the total average BCG coverage of the selected six countries
+combined_data <- do.call(rbind, data_list)
+total_avg_BCG_coverage <- mean(combined_data$avg_BCG_coverage)
+total_avg_tetanus_cases <- mean(combined_data$avg_tetanus_cases)
+total_avg_deaths <- mean(combined_data$avg_deaths)
+print(total_avg_BCG_coverage)
+print(total_avg_tetanus_cases)
+print(total_avg_deaths)
+
+#filtered the data based on the thresholds
+thresholds <- c("total_avg_BCG_coverage" = 77.73457, "total_avg_tetanus_cases" = 4261.9, "total_avg_deaths" = 41.25104) #the average of the six countries
+
+avgs <- c("total_avg_BCG_coverage", "total_avg_tetanus_cases", "total_avg_deaths")
+
+filtered_data_list <- list() #to store the filtered data frames for each variable
+
+for (var in avgs) {
+  filtered_data <- map(data_list, ~ filter(.x, !!sym(var) >= thresholds[var])) #check the values in the specified variable are greater than or equal to the threshold
+  filtered_data_list <- c(filtered_data_list, list(filtered_data))
+} 
+
+#create new variables into the data with re-coding
+df <- df %>% mutate(Countries_with_high_BCG_coverage = ifelse(BCG_coverage > 97, 1, 0 ))
+df <- df %>% mutate(Countries_with_high_tetanus_cases = ifelse(tetanus_cases > 70, 1, 0 ))
+df <- df %>% mutate(Countries_with_high_deaths = ifelse(deaths > 38, 1, 0 ))
+
+# Reshape from long to wide using pivot_wider and ignore NAs
+df_wide_int <- df %>% # #reshape the date to create a wide-format data frame for integer columns
+  pivot_wider(
+    names_from = Country,
+    values_from = c(BCG_coverage, tetanus_cases, deaths),
+    values_fill = 0
+  )
+
+df_wide_double <- df %>% #for double columns
+  pivot_wider(
+    names_from = Country,
+    values_from = c(Countries_with_high_BCG_coverage,   
+                    Countries_with_high_tetanus_cases, Countries_with_high_deaths),
+    values_fill = NA 
+  )
+
+```
+
+### **Part II-A Data Visualization and Functional Programming**
+
+```{r}
+#| label: data visualisations
+#| echo: true
+#| warning: false
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(purrr)
+
+df <- read_csv("Vaccine2017.csv")
+
+combined_data <- combined_data %>% filter(Country %in% c("Hungary", "China", "India"))
+
+mean_values <- combined_data %>%
+  select(-Country) %>%
+  map_dbl(mean, na.rm = TRUE)
+
+# Create a list of combinations of variables to visualize
+combinations <- list(
+  list(x = "avg_BCG_coverage", y = "avg_tetanus_cases", title = "BCG Coverage vs. Tetanus Cases"),
+  list(x = "avg_BCG_coverage", y = "avg_deaths", title = "BCG Coverage vs. Deaths"),
+  list(x = "avg_tetanus_cases", y = "avg_deaths", title = "Tetanus Cases vs. Deaths")
+)
+
+# Create an empty list to store the plots
+plots_list <- list()
+
+# Loop through the combinations and create the plots
+for (comb in combinations) {
+  p <- ggplot(combined_data, aes_string(x = comb$x, y = comb$y, color = "Country")) +
+    geom_point(size = 3) +
+    geom_smooth(method = "lm", se = TRUE, color = "grey") +
+    labs(
+      title = comb$title,
+      y = comb$y
+    )
+  plots_list[[comb$title]] <- p
+}
+
+plots_grid <- gridExtra::grid.arrange(grobs = plots_list, ncol = 2) 
+ 
+```
+
+After the previous tidy of the data set, I selected three Countries from developed country and middle-developing country and developing country (Hungary, China, India). My independent variable is the avg_BCG_coverage and dependent variables as avg_tetanus_cases and avg_deaths to examine the relationships. I choose this three variables as BCG vaccine is used for the immunization of tetanus disease. There are a clear trend and relationship showing here. With the increase of BCG vaccine coverage, the tetanus cases and deaths decrease, indicated from the line, there are a inverse proportion. The increase of tetanus cases result in increase of deaths which shown a proportional relationship.
+
+The pattern of graph BCG coverage vs. Tetanus Cases, and BCG coverage vs. Deaths are relatively similar, therefore, I will focus on analyzing the two graph as a whole. The trend ranking from highly developed country Hungary to developing country India, with low BCG coverage, there are more tetanus cases and due to lack of development of immunization effect and low coverage, the deaths also increase. The graph can be presentable for the data set as there are three big categories of variables: different types of vaccine coverage, diseases cases and tetanus deaths. Therefore, I select each one from a categories to show the relationship between vaccine coverage and disease burden. The countries are selected from top 10 averages of each variables. In the end, the graph demonstrate that developing countries with overall low coverage have larger number of tetanus cases and deaths and in contrast, developed countries with higher coverage contains least number of tetanus cases and deaths. This result contribute to the aim of showing the inequality of health access.
+
+For the code, a for loop here is used to create multiple scatter plots to visualize the relationships between different combinations of variables which can efficiently generate the plots instead of writing the same code for each combination.
+
+## **Part II-B Reproducibility**
+
+
+
+## **Part II-C Critical Engagement with AI: ChatGPT**
