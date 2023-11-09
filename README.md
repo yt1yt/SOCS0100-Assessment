@@ -10,4 +10,5 @@ This project is used for the analysis of vaccine coverage and diseases burden, u
  - [Part II-B](## **Part II-B Reproducibility**)
  - [Part II-C](## **Part II-C Critical Engagement with AI: ChatGPT**)
 
-## 
+## Contributor Covenant Code of Conduct
+
